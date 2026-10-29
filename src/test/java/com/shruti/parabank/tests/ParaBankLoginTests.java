@@ -1,16 +1,19 @@
 package com.shruti.parabank.tests;
 
-import java.time.Duration;
 
-import org.openqa.selenium.By;
+
+
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.WebDriverWait;
+
+
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
+
+import com.shruti.parabank.pages.AccountsOverviewPage;
+import com.shruti.parabank.pages.LoginPage;
 
 public class ParaBankLoginTests {
 
@@ -27,31 +30,34 @@ public class ParaBankLoginTests {
 	@Test(priority = 1)
 	public void validLogin()
 	{
-		driver.findElement(By.xpath("//input[@name='username']")).sendKeys("john");
-		driver.findElement(By.xpath("//input[@name='password']")).sendKeys("demo");
+		LoginPage loginPage=new LoginPage(driver);
+		loginPage.login("john", "demo");
 		
-		driver.findElement(By.xpath("//input[@value='Log In']")).click();
+		AccountsOverviewPage overviewPage=new AccountsOverviewPage(driver);
 		
-		WebDriverWait wait=new WebDriverWait(driver, Duration.ofSeconds(10));
-		wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//a[text()='Log Out']")));
-		
-		Assert.assertEquals(driver.getTitle(), "ParaBank | Accounts Overview");
-		Assert.assertTrue(driver.findElement(By.xpath("//a[text()='Log Out']")).isDisplayed(), "Log Out Link should be display");
+		Assert.assertTrue(overviewPage.isLogoutLinkDisplayed(), "Log Out Link should be display");
+		Assert.assertEquals(overviewPage.getPageTitle(), "ParaBank | Accounts Overview");
 	}
 	
 	@Test(priority = 2)
 	public void invalidLogin()
 	{
-		driver.findElement(By.xpath("//input[@name='username']")).sendKeys("john");
-		driver.findElement(By.xpath("//input[@name='password']")).sendKeys("wrong");
+		LoginPage loginPage=new LoginPage(driver);
+		loginPage.login("john", "wrong");
 		
-		driver.findElement(By.xpath("//input[@value='Log In']")).click();
+		Assert.assertTrue(loginPage.isErrorMessageDisplayed(), "Error message should be display");
+		Assert.assertEquals(loginPage.getErrorMessage(), "The username and password could not be verified.");
+	
+	}
+	
+	@Test(priority = 3)
+	public void emptyCredentials()
+	{
+		LoginPage loginPage=new LoginPage(driver);
+		loginPage.clickLogin();
 		
-		WebDriverWait wait=new WebDriverWait(driver, Duration.ofSeconds(10));
-		wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//p[@class='error']")));
-		
-		Assert.assertTrue(driver.findElement(By.xpath("//p[@class='error']")).isDisplayed(), "Error message should be display");
-		Assert.assertEquals(driver.findElement(By.xpath("//p[@class='error']")).getText(), "The username and password could not be verified.");
+		Assert.assertTrue(loginPage.isErrorMessageDisplayed(), "Error message should be display");
+		Assert.assertEquals(loginPage.getErrorMessage(), "Please enter a username and password.");
 	
 	}
 	
